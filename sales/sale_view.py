@@ -1,7 +1,7 @@
 from django.db.models import Prefetch
 from django.views.generic.list import ListView
 from django.views.generic.detail import DetailView
-from .models import Sale, SaleLine
+from .models import Sale, SaleLine, LotLine
 
 class ShardedQuerysetMixin:
     def get_queryset(self):
@@ -46,5 +46,8 @@ class SaleDetailView(ShardedQuerysetMixin, DetailView):
         return Sale.objects.using(f'shard_{retail_point_id}') \
             .prefetch_related(
                 Prefetch('lines', queryset=SaleLine.objects.using(f'shard_{retail_point_id}')),
-                'lot_lines'  # Prefetch lot_lines if needed
+               
+                Prefetch('lot_lines', queryset=LotLine.objects.using(f'shard_{retail_point_id}')),
+            
+                
             ).filter(id=sale_id)

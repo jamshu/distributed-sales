@@ -1,0 +1,6 @@
+search using bill no
+day close summary generate
+supervisor ctl configuration
+sale list view and detail view enhancement
+url parameter
+odoo summary to django view using url parameter

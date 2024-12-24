@@ -27,23 +27,27 @@ class TimescaleModel(SaleBase):
 class Sale(SaleBase):
     
     retail_point_id = models.PositiveIntegerField()
+    retail_point_name = models.CharField(max_length=100)
     local_retail_point_db_id = models.PositiveIntegerField()
     remarks = models.CharField(max_length=100)
     partner_id = models.PositiveIntegerField()
     debtors_account_id = models.PositiveIntegerField()
     sale_journal_id = models.PositiveIntegerField()
     sale_counter_id = models.PositiveIntegerField()
+    sale_counter_name = models.CharField(max_length=50)
     sale_date = models.DateField(default=timezone.now)
     total_amount = models.DecimalField(max_digits=15, decimal_places=2)
     payment_journal_id = models.PositiveIntegerField()
+    payment_method_name = models.CharField(max_length=50)
     name = models.CharField(max_length=100, null=False, blank=False)
-    sale_num = models.CharField(max_length=100)
+    sale_num = models.CharField(max_length=100, unique=True)
     customer_name = models.CharField(max_length=100, null=True, blank=True)
     created_at = models.DateTimeField(default=now)
     is_default_customer = models.BooleanField()
     total_cess = models.DecimalField(max_digits=10,decimal_places=2)
     confirmed_on = models.DateTimeField()
     confirmed_by = models.PositiveIntegerField()
+    confirmed_by_name = models.CharField(max_length=50)
     store_type = models.CharField(max_length=100)
     miscelleneous_sale_price = models.DecimalField(max_digits=10,decimal_places=2)
     miscellaneous_product_id = models.PositiveIntegerField()
@@ -76,7 +80,7 @@ class SaleLine(TimescaleModel):
     total_cess = models.DecimalField(max_digits=10, decimal_places=2)
     sale_type = models.CharField(max_length=25)
     qty_available = models.IntegerField()
-
+    total = models.DecimalField(max_digits=10,decimal_places=2)
     class Meta:
         db_table = 'sales_order_line'
         indexes = [ 
