@@ -15,6 +15,6 @@
 
 ## to run script
 
-- clone the repp
+- clone the repo
 - chmod+x setup_django_supervisor.sh
 - ./setup_django_supervisor.sh
