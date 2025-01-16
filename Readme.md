@@ -12,3 +12,9 @@
 - [ ] python manage.py rqworker day_close
 
 ## Use Supervisor ctl for configure as service
+
+## to run script
+
+- clone the repp
+- chmod+x setup_django_supervisor.sh
+- ./setup_django_supervisor.sh
