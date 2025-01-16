@@ -3,6 +3,7 @@ from django.views.generic.list import ListView
 from django.views.generic.detail import DetailView
 from .models import Sale, SaleLine, LotLine
 
+
 class ShardedQuerysetMixin:
     def get_queryset(self):
         # Get retail_point_id from session or URL
@@ -27,6 +28,16 @@ class SaleListView(ShardedQuerysetMixin, ListView):
 
     def get_queryset(self):
         queryset = super().get_queryset()
+        query = self.request.GET.get('q')
+        counter_id = self.request.GET.get('counter_id')
+        payment_journal_id = self.request.GET.get('payment_journal_id')
+
+        if query:
+            queryset = queryset.filter(sale_num__icontains=query)
+        if counter_id:
+            queryset = queryset.filter(sale_counter_id=counter_id)
+        if payment_journal_id:
+            queryset = queryset.filter(payment_journal_id=payment_journal_id)
         return queryset.select_related().only(
             'sale_num', 'sale_date', 'customer_name',
             'confirmed_on'

@@ -53,6 +53,8 @@ class Sale(SaleBase):
     miscellaneous_product_id = models.PositiveIntegerField()
     miscellaneous_qty = models.DecimalField(max_digits=10,decimal_places=2)
     miscellaneous_invoice_num = models.CharField(max_length=100, null=False, blank=False)
+
+    
     
     class Meta:
         db_table = 'sales_order'
@@ -81,6 +83,13 @@ class SaleLine(TimescaleModel):
     sale_type = models.CharField(max_length=25)
     qty_available = models.IntegerField()
     total = models.DecimalField(max_digits=10,decimal_places=2)
+    def save(self, *args, **kwargs):
+        # Set the time field based on the sale_date and current time
+        if self.sale and self.sale.sale_date:
+            sale_date = self.sale.sale_date
+            current_time = now().time()
+            self.time = timezone.datetime.combine(sale_date, current_time)
+        super(SaleLine, self).save(*args, **kwargs)
     class Meta:
         db_table = 'sales_order_line'
         indexes = [ 
@@ -98,6 +107,14 @@ class LotLine(TimescaleModel):
     product_name = models.CharField(max_length=255)
     lot_id = models.PositiveIntegerField()
     quantity = models.DecimalField(max_digits=10,decimal_places=1)
+
+    def save(self, *args, **kwargs):
+        # Set the time field based on the sale_date and current time
+        if self.sale and self.sale.sale_date:
+            sale_date = self.sale.sale_date
+            current_time = now().time()
+            self.time = timezone.datetime.combine(sale_date, current_time)
+        super(LotLine, self).save(*args, **kwargs)
 
     class Meta:
         db_table = 'sales_lot_line'

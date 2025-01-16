@@ -8,6 +8,13 @@ import logging
 import json
 from .models import Sale, SaleLine, LotLine, MiscLotLine
 from .validators import validate_sale_data
+from decimal import Decimal
+
+class DecimalEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, Decimal):
+            return float(obj)
+        return super(DecimalEncoder, self).default(obj)
 
 logger = logging.getLogger(__name__)
 
@@ -131,20 +138,35 @@ def process_sale_order(sale_data):
         logger.error(f"Error processing sale order: {e}")
         return {'status': 'error', 'message': str(e)}
 
-def send_summary_to_odoo(summary_payload):
+@django_rq.job('send_summary')
+def send_summary_to_odoo(summary_payload, url):
+    print("url here in send summary>>>>>>>>>>>",url)
     try:
-        # Replace with actual Odoo API endpoint
+        payload_json = json.dumps(summary_payload, cls=DecimalEncoder)
         response = requests.post(
-            'https://your-odoo-instance.com/api/sales-summary',
-            json=summary_payload
+            url,
+            data=payload_json,
+            headers={'Content-Type': 'application/json'}
         )
         response.raise_for_status()
-        return response.json()
+        data  = response.json()
+        return data
+       
     except Exception as e:
         logger.error(f"Error sending summary to Odoo: {e}")
-        return None
+        job = django_rq.get_current_job()  # Get the current job
+        if job:
+            job.meta['status'] = 'failed'
+        return {"error": str(e)}
+
+
+def get_local_retail_point_id(shard_db):
+    # Replace with actual logic to map retail_point_id to local_retail_point_id
+    result = Sale.objects.using(shard_db).last().local_retail_point_db_id
+    return result
+
 @django_rq.job('day_close')
-def generate_day_close_summary(retail_point_id, date=None):
+def generate_day_close_summary(retail_point_id, date=None, url=None):
     """
     Generate aggregated day-close summary grouped by counter_id and payment_method.
     """
@@ -154,12 +176,13 @@ def generate_day_close_summary(retail_point_id, date=None):
     try:
         # Use the shard database corresponding to the retail_point_id
         shard_db = f'shard_{retail_point_id}'
-        
-        # Aggregate sales data by counter_id and payment_method
-        sales= (
+        local_retail_point_db_id = get_local_retail_point_id(shard_db)
+
+        # Aggregate sales data by counter_id and payment method
+        sales = (
             Sale.objects.using(shard_db)
-            .filter(retail_point_id=retail_point_id, order_date__date=date)
-            .values('counter_id', 'payment_method')
+            .filter(retail_point_id=retail_point_id, sale_date=date)
+            .values('sale_counter_id', 'payment_journal_id')
             .annotate(
                 total_sales=Sum('total_amount'),
                 total_transactions=Count('id')
@@ -170,46 +193,125 @@ def generate_day_close_summary(retail_point_id, date=None):
 
         # For each counter and payment method combination, gather product sales data
         for sale in sales:
-            counter_id = sale['counter_id']
-            payment_method = sale['payment_method']
+            counter_id = sale['sale_counter_id']
+            payment_method = sale['payment_journal_id']
             total_sales = sale['total_sales']
-            total_transactions = sale['total_transactions']
 
-            # Aggregate product sales for this counter and payment method
-            product_sales = (
+            # Fetch sale lines aggregated by product
+            sale_lines = (
                 SaleLine.objects.using(shard_db)
                 .filter(
-                    sale__retail_point_id=retail_point_id,
-                    sale__order_date__date=date,
-                    sale__counter_id=counter_id,
-                    sale__payment_method=payment_method
-                    )
-                .values('product_id')
+                    time__date=date,
+                    sale__sale_counter_id=counter_id,
+                    sale__payment_journal_id=payment_method,
+                )
+                .values(
+                    'product_id', 'name', 'product_uom', 'vat_percent', 
+                    'price_unit', 'account_id', 'retail_sale_mrp', 
+                    'cess_id', 'qty_available','cess_amount', 'sale_type'
+                )
                 .annotate(
-                    qty_sold=Sum('quantity'),
-                    total_revenue=Sum('subtotal')
+                    product_uom_qty=Sum('product_uom_qty'),
+                    total_cess=Sum('total_cess'),
                 )
             )
 
-            # Prepare the summary
-            result.append({
-                "retail_point_id": retail_point_id,
-                "counter_id": counter_id,
-                "payment_method": payment_method,
-                "total_sales": float(total_sales or 0),
-                "total_transactions": total_transactions,
-                "product_lines": [
-                    {
-                        "product_id": line['product_id'],
-                        "qty_sold": line['qty_sold'],
-                        "total_revenue": float(line['total_revenue'] or 0),
-                    }
-                    for line in product_sales
-                ]
-            })
+            # Fetch lot lines aggregated by product and lot
+            lot_lines = (
+                LotLine.objects.using(shard_db)
+                .filter(
+                    time__date=date,
+                    sale__sale_counter_id=counter_id,
+                    sale__payment_journal_id=payment_method,
+                )
+                .values('product_id', 'lot_id')
+                .annotate(quantity=Sum('quantity'))
+            )
 
+            # Map lot data by product
+            lot_dicts = {}
+            for lot in lot_lines:
+                product_id = lot['product_id']
+                lot_id = lot['lot_id']
+                if product_id not in lot_dicts:
+                    lot_dicts[product_id] = {}
+                if lot_id not in lot_dicts[product_id]:
+                    lot_dicts[product_id][lot_id] = 0
+                lot_dicts[product_id][lot_id] = lot['quantity']
+
+            # Prepare product aggregates
+            product_aggregates = {}
+            for line in sale_lines:
+                product_id = line['product_id']
+                # Initialize or update product aggregate data
+                if product_id not in product_aggregates:
+                    product_aggregates[product_id] = {
+                        'product_id': product_id,
+                        'name': line['name'],
+                        'product_uom_qty': 0,  # Total quantity should be initialized to 0
+                        'product_uom': line['product_uom'],
+                        'vat_percent': line['vat_percent'],
+                        'price_unit': line['price_unit'],
+                        'account_id': line['account_id'],
+                        'retail_sale_mrp': line['retail_sale_mrp'],
+                        'cess_id': line['cess_id'],
+                        'taxes_ids': [],  # Can be adjusted if required
+                        'cess_amount': line['cess_amount'],  # Can be adjusted if required
+                        'total_cess': line['total_cess'],
+                        'qty_available': line['qty_available'],
+                        'lot_details_ids': [],  # Initialize empty list for lot details
+                        'sale_type': line['sale_type'],
+                    }
+
+                # Update product_uom_qty
+                product_aggregates[product_id]['product_uom_qty'] += line['product_uom_qty']
+
+                # Add lot details if available
+                if product_id in lot_dicts:
+                    # Include lot quantity data here
+                    product_aggregates[product_id]['lot_details_ids'] = [
+                        [0, 0, {'lot_id': lot_id, 'quantity': qty}]
+                        for lot_id, qty in lot_dicts[product_id].items()
+                    ]
+
+            # Prepare the summary
+            sale_num = f"{date.strftime('%Y%m%d')}/{retail_point_id}/{counter_id}/{payment_method}"
+            summary = {
+                'local_retail_point_db_id': local_retail_point_db_id,
+                'retail_point_id': int(retail_point_id),
+                'sale_date': date.strftime('%Y-%m-%d'),
+                'payment_journal_id': payment_method,
+                'debtors_account_id': 0,
+                'sale_journal_id': 0,
+                'miscelleneous_sale_price': 0.0,
+                'miscellaneous_product_id': 0,
+                'miscellaneous_qty': 0,
+                'miscellaneous_invoice_num': False,
+                'sale_num': sale_num,
+                'name': sale_num,
+                'miscellaneous_name': 'New',
+                'sale_counter_id': counter_id,
+                'customer_name':'',
+                'is_default_customer': True,
+                'total_including_miscellaneous': float(total_sales or 0),
+                'amount_total': float(total_sales or 0),
+                'confirmed_on': timezone.now().strftime('%Y-%m-%d %H:%M:%S'),
+                'sale_line_ids': [],
+                'miscellaneous_lot_details_ids': [],
+                'store_type': 'FLS'
+            }
+
+            for product in product_aggregates.values():
+                summary['sale_line_ids'].append([0, 0, product])
+            job = send_summary_to_odoo.delay(summary, url)
+            result.append(job.id)
+
+        
         return result
 
     except Exception as e:
-        logger.error(f"Error generating day-close summary for retail_point_id {retail_point_id}: {e}")
+        logger.error(f"Error processing daily summary: {e}")
+        job = django_rq.get_current_job()  # Get the current job
+        if job:
+            job.meta['status'] = 'failed'
         return {"error": str(e)}

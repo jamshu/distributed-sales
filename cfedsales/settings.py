@@ -124,6 +124,11 @@ RQ_QUEUES = {
         'HOST': 'localhost',
         'PORT': 6379,
         'DB': 2,
+    },
+    'send_summary': {
+        'HOST': 'localhost',
+        'PORT': 6379,
+        'DB': 3,
     }
 }
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases

@@ -1,10 +1,10 @@
+from django.utils import timezone
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from django.conf import settings
 from .tasks import process_sale_order, generate_day_close_summary
 import logging
-
 logger = logging.getLogger(__name__)
 
 class SaleOrderProcessView(APIView):
@@ -50,10 +50,13 @@ class DayCloseSummaryView(APIView):
     """
     def post(self, request):
         try:
-            # Get date from request, default to current date if not provided
-            date_str = request.data.get('date')
-            process_mode = request.data.get('mode', 'queue')  # 'queue' or 'immediate'
+           
             
+            data = request.POST.dict()
+            date_str = data.get('close_date')
+            retail_point_id = data.get('retail_point_id')
+            url = data.get('url')
+            print("data url>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>", url)
             # Parse date if provided
             if date_str:
                 try:
@@ -66,23 +69,14 @@ class DayCloseSummaryView(APIView):
             else:
                 summary_date = timezone.now().date()
             
-            # Process based on mode
-            if process_mode == 'immediate':
-                # Direct processing for smaller systems or testing
-                summaries = generate_day_close_summary(summary_date)
-                return Response({
-                    'status': 'completed',
-                    'date': str(summary_date),
-                    'summaries': summaries
-                }, status=status.HTTP_200_OK)
             
             # Default to queued processing
-            job = generate_day_close_summary.delay(summary_date)
-            
+            job = generate_day_close_summary.delay(retail_point_id, summary_date, url)
             return Response({
                 'status': 'queued', 
                 'job_id': job.id,
-                'date': str(summary_date)
+                'date': str(summary_date),
+                'retail_point_id': retail_point_id,
             }, status=status.HTTP_202_ACCEPTED)
         
         except Exception as e:
@@ -91,10 +85,4 @@ class DayCloseSummaryView(APIView):
                 {'error': 'Internal server error during day close summary generation'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-# In your urls.py, add:
-# from django.urls import path
-# from .views import SaleOrderProcessView
-# 
-# urlpatterns = [
-#     path('api/sales/process/', SaleOrderProcessView.as_view(), name='process_sale_order'),
-# ]
+

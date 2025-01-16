@@ -1,4 +1,5 @@
-search using bill no
+export the retail point ids to generate shards
+optimize the fiedlds and remove deuplicate fields on the db
 day close summary generate
 supervisor ctl configuration
 sale list view and detail view enhancement
