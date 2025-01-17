@@ -6,41 +6,63 @@ PROJECT_DIR="$USER_HOME/cfedsales" # The Django project path in the user's home 
 VENV_DIR="$PROJECT_DIR/venv" # Virtual environment directory inside the project
 LOG_DIR="/var/log/supervisor"
 SUPERVISOR_CONF="/etc/supervisor/conf.d/django_project.conf"
+DB_USER="django"
+DB_PASSWORD="secure_password"
 
-# Step 1: Install Supervisor
-echo "Installing Supervisor..."
+
+# Step 1: Install Supervisor and TimescaleDB prerequisites
+echo "Installing prerequisites..."
 sudo apt-get update -y
-sudo apt-get install -y supervisor
+sudo apt-get install -y supervisor python3-venv python3-pip wget gnupg lsb-release postgresql postgresql-contrib
 
-# Step 2: Create log directory
+# Step 2: Install TimescaleDB
+echo "Installing TimescaleDB..."
+wget --quiet -O - https://packages.timescale.com/keys/timescaledb.keys | sudo tee /etc/apt/trusted.gpg.d/timescale.asc
+sudo sh -c "echo 'deb https://packages.timescale.com/apt $(lsb_release -cs) main' > /etc/apt/sources.list.d/timescale_timescaledb.list"
+sudo apt-get update -y
+sudo apt-get install -y timescaledb-2-postgresql-14
+
+# Configure TimescaleDB
+echo "Configuring TimescaleDB..."
+sudo timescaledb-tune --quiet --yes
+sudo systemctl restart postgresql
+
+# Step 3: Configure PostgreSQL
+echo "Configuring PostgreSQL..."
+sudo -u postgres psql -c "CREATE USER $DB_USER WITH PASSWORD '$DB_PASSWORD';"
+sudo -u postgres psql -c "ALTER USER $DB_USER CREATEDB;"
+
+
+# Step 4: Create log directory
 echo "Creating log directory..."
 sudo mkdir -p $LOG_DIR
 sudo chown $USER:$USER $LOG_DIR
 
-# Step 3: Check and create virtual environment if it doesn't exist
+# Step 5: Set up Virtual Environment
 if [ ! -d "$VENV_DIR" ]; then
-    echo "Virtual environment not found. Creating..."
-    python3 -m venv $VENV_DIR
+  echo "Creating virtual environment in $VENV_DIR..."
+  python3 -m venv $VENV_DIR
 fi
 
-# Step 4: Activate Virtual Environment
+# Activate Virtual Environment
 echo "Activating virtual environment..."
 source $VENV_DIR/bin/activate
 
-# Step 5: Install dependencies from requirements.txt
-echo "Installing dependencies from requirements.txt..."
-pip install -r $PROJECT_DIR/requirements.txt
-
-# Step 6: Set DJANGO_SETTINGS_MODULE if necessary (optional)
-export DJANGO_SETTINGS_MODULE="cfedsales.settings"
+# Step 6: Install Python requirements
+if [ -f "$PROJECT_DIR/requirements.txt" ]; then
+  echo "Installing Python requirements..."
+  pip install --upgrade pip
+  pip install -r $PROJECT_DIR/requirements.txt
+else
+  echo "requirements.txt not found in $PROJECT_DIR. Skipping installation."
+fi
 
 # Step 7: Django initial setup - Migrate Database and Custom Commands
 echo "Running Django management commands..."
+python $PROJECT_DIR/manage.py create_shard_database
+python $PROJECT_DIR/manage.py enable_timescale
 python $PROJECT_DIR/manage.py migrate
-
-# If you have any other custom commands to run, include them here
-# Example: python $PROJECT_DIR/manage.py my_custom_command
-# python $PROJECT_DIR/manage.py custom_command
+python $PROJECT_DIR/manage.py migrate_shards
 
 # Step 8: Create Supervisor configuration file
 echo "Creating Supervisor configuration..."
@@ -49,7 +71,7 @@ sudo tee $SUPERVISOR_CONF > /dev/null <<EOL
 nodaemon=true
 
 [program:django]
-command=$VENV_DIR/bin/python $PROJECT_DIR/manage.py runserver 0.0.0.0:8080
+command=$VENV_DIR/bin/python $PROJECT_DIR/manage.py runserver 0.0.0.0:8000
 directory=$PROJECT_DIR
 autostart=true
 autorestart=true
@@ -59,7 +81,7 @@ stderr_logfile=$LOG_DIR/django_error.log
 [program:send_summary]
 command=$VENV_DIR/bin/python $PROJECT_DIR/manage.py rqworker send_summary
 directory=$PROJECT_DIR
-numprocs=4
+numprocs=2
 process_name=%(program_name)s_%(process_num)02d
 autostart=true
 autorestart=true
@@ -69,7 +91,7 @@ stderr_logfile=$LOG_DIR/rq_send_summary_error.log
 [program:rq_sales_processing]
 command=$VENV_DIR/bin/python $PROJECT_DIR/manage.py rqworker sales_processing
 directory=$PROJECT_DIR
-numprocs=8
+numprocs=12
 process_name=%(program_name)s_%(process_num)02d
 autostart=true
 autorestart=true
@@ -79,7 +101,7 @@ stderr_logfile=$LOG_DIR/rq_sales_processing_error.log
 [program:rq_day_close]
 command=$VENV_DIR/bin/python $PROJECT_DIR/manage.py rqworker day_close
 directory=$PROJECT_DIR
-numprocs=4
+numprocs=8
 process_name=%(program_name)s_%(process_num)02d
 autostart=true
 autorestart=true
@@ -101,3 +123,6 @@ sudo systemctl start supervisor
 echo "Supervisor Status:"
 sudo supervisorctl status
 
+echo "Setup Complete!"
+echo "User: $DB_USER"
+echo "Password: $DB_PASSWORD"

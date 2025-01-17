@@ -18,3 +18,8 @@
 - clone the repo
 - chmod+x setup_django_supervisor.sh
 - ./setup_django_supervisor.sh
+
+## Superviosor
+sudo supervisorctl status
+sudo supervisorctl start rq_day_close:*
+sudo supervisorctl stop rq_day_close:*
