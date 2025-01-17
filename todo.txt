@@ -7,9 +7,3 @@ url parameter
 odoo summary to django view using url parameter
 
 
-# Step 7: Django initial setup - Migrate Database and Custom Commands
-echo "Running Django management commands..."
-python $PROJECT_DIR/manage.py create_shard_database
-python $PROJECT_DIR/manage.py enable_timescale
-python $PROJECT_DIR/manage.py migrate
-python $PROJECT_DIR/manage.py migrate_shards
