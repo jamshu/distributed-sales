@@ -1,8 +1,16 @@
 #!/bin/bash
 
+
+# Function to check if command exists
+command_exists() {
+    command -v "$1" >/dev/null 2>&1
+}
+
+
+
 # Variables
 USER_HOME=$(eval echo ~$USER) # Get the home directory of the current user
-PROJECT_DIR="$USER_HOME/cfedsales" # The Django project path in the user's home directory
+PROJECT_DIR="$(dirname "$(realpath "$0")")" # The Django project path in the user's home directory
 VENV_DIR="$PROJECT_DIR/venv" # Virtual environment directory inside the project
 LOG_DIR="/var/log/supervisor"
 SUPERVISOR_CONF="/etc/supervisor/conf.d/django_project.conf"
@@ -10,16 +18,26 @@ DB_USER="django"
 DB_PASSWORD="secure_password"
 
 
-# Step 1: Install Supervisor and TimescaleDB prerequisites
-echo "Installing prerequisites..."
-sudo apt-get update -y
-sudo apt-get install -y supervisor python3-venv python3-pip wget gnupg lsb-release postgresql postgresql-contrib
 
+# Add PostgreSQL repository
+echo "Adding PostgreSQL repository..."
+sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
+
+# Add TimescaleDB repository
+echo "Adding TimescaleDB repository..."
+wget --quiet -O - https://packagecloud.io/timescale/timescaledb/gpgkey | gpg --dearmor > /usr/share/keyrings/timescaledb-keyring.gpg
+echo "deb [signed-by=/usr/share/keyrings/timescaledb-keyring.gpg] https://packagecloud.io/timescale/timescaledb/ubuntu $(lsb_release -cs) main" > /etc/apt/sources.list.d/timescaledb.list
+
+# Update package list again
+apt-get update
+
+sudo apt-get update -y
+sudo apt-get install -y apt-transport-https
+sudo apt-get install -y supervisor python3-venv python3-pip wget gnupg lsb-release
+sudo apt-get install -y postgresql-14
 # Step 2: Install TimescaleDB
 echo "Installing TimescaleDB..."
-wget --quiet -O - https://packages.timescale.com/keys/timescaledb.keys | sudo tee /etc/apt/trusted.gpg.d/timescale.asc
-sudo sh -c "echo 'deb https://packages.timescale.com/apt $(lsb_release -cs) main' > /etc/apt/sources.list.d/timescale_timescaledb.list"
-sudo apt-get update -y
 sudo apt-get install -y timescaledb-2-postgresql-14
 
 # Configure TimescaleDB
@@ -59,10 +77,10 @@ fi
 
 # Step 7: Django initial setup - Migrate Database and Custom Commands
 echo "Running Django management commands..."
-python $PROJECT_DIR/manage.py create_shard_database
-python $PROJECT_DIR/manage.py enable_timescale
-python $PROJECT_DIR/manage.py migrate
-python $PROJECT_DIR/manage.py migrate_shards
+python3 $PROJECT_DIR/manage.py create_shard_database
+python3 $PROJECT_DIR/manage.py enable_timescale
+python3 $PROJECT_DIR/manage.py migrate
+python3 $PROJECT_DIR/manage.py migrate_shards
 
 # Step 8: Create Supervisor configuration file
 echo "Creating Supervisor configuration..."
@@ -71,17 +89,15 @@ sudo tee $SUPERVISOR_CONF > /dev/null <<EOL
 nodaemon=true
 
 [program:django]
-command=$VENV_DIR/bin/bin/gunicorn --workers 2 --bind 0.0.0.0:8000 cfedsales.wsgi:application
-directory=/path/to/your/project
-user=youruser
+command=$VENV_DIR/bin/python $PROJECT_DIR/manage.py runserver 0.0.0.0:5000
+directory=$PROJECT_DIR
 autostart=true
 autorestart=true
-stopsignal=TERM
-stdout_logfile=/var/log/django_gunicorn.log
-stderr_logfile=/var/log/django_gunicorn.err
+stdout_logfile=$LOG_DIR/django.log
+stderr_logfile=$LOG_DIR/django_error.log
 
 [program:send_summary]
-command=$VENV_DIR/bin/python $PROJECT_DIR/manage.py rqworker send_summary
+command=$VENV_DIR/bin/python3 $PROJECT_DIR/manage.py rqworker send_summary
 directory=$PROJECT_DIR
 numprocs=2
 process_name=%(program_name)s_%(process_num)02d
@@ -91,7 +107,7 @@ stdout_logfile=$LOG_DIR/rq_send_summary.log
 stderr_logfile=$LOG_DIR/rq_send_summary_error.log
 
 [program:rq_sales_processing]
-command=$VENV_DIR/bin/python $PROJECT_DIR/manage.py rqworker sales_processing
+command=$VENV_DIR/bin/python3 $PROJECT_DIR/manage.py rqworker sales_processing
 directory=$PROJECT_DIR
 numprocs=12
 process_name=%(program_name)s_%(process_num)02d
@@ -101,7 +117,7 @@ stdout_logfile=$LOG_DIR/rq_sales_processing.log
 stderr_logfile=$LOG_DIR/rq_sales_processing_error.log
 
 [program:rq_day_close]
-command=$VENV_DIR/bin/python $PROJECT_DIR/manage.py rqworker day_close
+command=$VENV_DIR/bin/python3 $PROJECT_DIR/manage.py rqworker day_close
 directory=$PROJECT_DIR
 numprocs=8
 process_name=%(program_name)s_%(process_num)02d

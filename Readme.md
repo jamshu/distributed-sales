@@ -17,7 +17,7 @@
 
 - clone the repo
 - chmod+x setup_django_supervisor.sh
-- ./setup_django_supervisor.sh
+- sudo ./setup_django_supervisor.sh
 
 ## Superviosor
 sudo supervisorctl status
