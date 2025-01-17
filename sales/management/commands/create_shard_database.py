@@ -3,7 +3,7 @@ from django.core.management.base import BaseCommand
 import psycopg2
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 import os
-
+from django.conf import settings
 
 class Command(BaseCommand):
     help = 'Create shard databases'
@@ -18,13 +18,8 @@ class Command(BaseCommand):
             'port': os.getenv('DB_PORT', '5432')
         }
 
-        retail_ids = [
-    81, 115, 116, 119, 68, 82, 69, 83, 70, 117, 71, 85, 72, 113, 73, 
-    77, 78, 79, 80, 86, 87, 88, 89, 90, 91, 92, 94, 95, 96, 97, 98, 
-    99, 100, 101, 102, 103, 104, 105, 106, 108, 109, 110, 111, 118, 
-    74, 93, 75, 114
-]
         
+        retail_ids = settings.RETAIL_IDS
         try:
             # Establish connection
             conn = psycopg2.connect(**db_params)

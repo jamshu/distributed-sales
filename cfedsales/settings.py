@@ -102,13 +102,13 @@ def generate_shard_databases(retails):
             'PORT': os.getenv('DB_PORT', '5432'),
         }
     return shards
-retail_ids = [
+RETAIL_IDS = [
     81, 115, 116, 119, 68, 82, 69, 83, 70, 117, 71, 85, 72, 113, 73, 
     77, 78, 79, 80, 86, 87, 88, 89, 90, 91, 92, 94, 95, 96, 97, 98, 
     99, 100, 101, 102, 103, 104, 105, 106, 108, 109, 110, 111, 118, 
     74, 93, 75, 114
 ]
-DATABASES.update(generate_shard_databases(retail_ids))
+DATABASES.update(generate_shard_databases(RETAIL_IDS))
 
 # Database Routing
 DATABASE_ROUTERS = ['sales.router.ShardedDatabaseRouter']
