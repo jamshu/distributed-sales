@@ -71,12 +71,14 @@ sudo tee $SUPERVISOR_CONF > /dev/null <<EOL
 nodaemon=true
 
 [program:django]
-command=$VENV_DIR/bin/python $PROJECT_DIR/manage.py runserver 0.0.0.0:8000
-directory=$PROJECT_DIR
+command=$VENV_DIR/bin/bin/gunicorn --workers 2 --bind 0.0.0.0:8000 cfedsales.wsgi:application
+directory=/path/to/your/project
+user=youruser
 autostart=true
 autorestart=true
-stdout_logfile=$LOG_DIR/django.log
-stderr_logfile=$LOG_DIR/django_error.log
+stopsignal=TERM
+stdout_logfile=/var/log/django_gunicorn.log
+stderr_logfile=/var/log/django_gunicorn.err
 
 [program:send_summary]
 command=$VENV_DIR/bin/python $PROJECT_DIR/manage.py rqworker send_summary
