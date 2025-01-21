@@ -26,16 +26,22 @@ wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key a
 
 # Add TimescaleDB repository
 echo "Adding TimescaleDB repository..."
-wget --quiet -O - https://packagecloud.io/timescale/timescaledb/gpgkey | gpg --dearmor > /usr/share/keyrings/timescaledb-keyring.gpg
-echo "deb [signed-by=/usr/share/keyrings/timescaledb-keyring.gpg] https://packagecloud.io/timescale/timescaledb/ubuntu $(lsb_release -cs) main" > /etc/apt/sources.list.d/timescaledb.list
+echo "deb https://packagecloud.io/timescale/timescaledb/ubuntu/ $(lsb_release -c -s) main" | sudo tee /etc/apt/sources.list.d/timescaledb.list
+wget --quiet -O - https://packagecloud.io/timescale/timescaledb/gpgkey | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/timescaledb.gpg
 
 # Update package list again
-apt-get update
+sudo apt-get update
 
 sudo apt-get update -y
 sudo apt-get install -y apt-transport-https
 sudo apt-get install -y supervisor python3-venv python3-pip wget gnupg lsb-release
 sudo apt-get install -y postgresql-14
+sudo apt-get install -y redis-server
+
+# Step 2: Enable and Start Redis Server
+echo "Configuring Redis server..."
+sudo systemctl enable redis
+sudo systemctl start redis
 # Step 2: Install TimescaleDB
 echo "Installing TimescaleDB..."
 sudo apt-get install -y timescaledb-2-postgresql-14
