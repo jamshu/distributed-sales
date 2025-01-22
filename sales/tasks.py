@@ -140,7 +140,7 @@ def process_sale_order(sale_data):
 
 @django_rq.job('send_summary')
 def send_summary_to_odoo(summary_payload, url):
-    print("url here in send summary>>>>>>>>>>>",url)
+   
     try:
         payload_json = json.dumps(summary_payload, cls=DecimalEncoder)
         response = requests.post(
@@ -185,6 +185,7 @@ def generate_day_close_summary(retail_point_id, date=None, url=None):
             .values('sale_counter_id', 'payment_journal_id')
             .annotate(
                 total_sales=Sum('total_amount'),
+                total_cess=Sum('total_cess'),
                 total_transactions=Count('id')
             )
         )
@@ -196,6 +197,7 @@ def generate_day_close_summary(retail_point_id, date=None, url=None):
             counter_id = sale['sale_counter_id']
             payment_method = sale['payment_journal_id']
             total_sales = sale['total_sales']
+            total_cess = sale['total_cess']
 
             # Fetch sale lines aggregated by product
             sale_lines = (
@@ -294,6 +296,7 @@ def generate_day_close_summary(retail_point_id, date=None, url=None):
                 'customer_name':'',
                 'is_default_customer': True,
                 'total_including_miscellaneous': float(total_sales or 0),
+                'total_cess': float(total_cess or 0),
                 'amount_total': float(total_sales or 0),
                 'confirmed_on': timezone.now().strftime('%Y-%m-%d %H:%M:%S'),
                 'sale_line_ids': [],
