@@ -30,17 +30,20 @@ class SaleListView(ShardedQuerysetMixin, ListView):
         queryset = super().get_queryset()
         query = self.request.GET.get('q')
         counter_id = self.request.GET.get('counter_id')
+        date = self.request.GET.get('date')
         payment_journal_id = self.request.GET.get('payment_journal_id')
 
         if query:
             queryset = queryset.filter(sale_num__icontains=query)
+        if date:
+            queryset = queryset.filter(sale_date=date)
         if counter_id:
             queryset = queryset.filter(sale_counter_id=counter_id)
         if payment_journal_id:
             queryset = queryset.filter(payment_journal_id=payment_journal_id)
         return queryset.select_related().only(
             'sale_num', 'sale_date', 'customer_name',
-            'confirmed_on'
+            'payment_method_name', 'sale_counter_name'
         ).order_by('-created_at')
 
 class SaleDetailView(ShardedQuerysetMixin, DetailView):

@@ -10,10 +10,7 @@
             <h1 class="text-3xl font-bold">Bill No: {{ sale.sale_num }}</h1>
             <p class="mt-1 text-sm">{{ sale.retail_point_name }}</p>
         </div>
-        <a href="{% url 'sale_list' retail_point_id=retail_point_id %}" 
-           class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium bg-white text-blue-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-            Back to List
-        </a>
+       
     </div>
 
     <div class="p-6 space-y-10">

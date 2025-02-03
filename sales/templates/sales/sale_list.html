@@ -26,7 +26,10 @@
                         Customer
                     </th>
                     <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider">
-                        Actions
+                        Payment Method
+                    </th>
+                    <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider">
+                        Counter
                     </th>
                 </tr>
             </thead>
@@ -36,9 +39,8 @@
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ sale.sale_num }}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ sale.sale_date|date:"M d, Y" }}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ sale.customer_name|default:"Default Customer" }}</td>
-                    <td class="px-6 py-4 text-center text-sm text-gray-900">
-                        <span class="text-blue-500">View Details</span>
-                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ sale.payment_method_name }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ sale.sale_counter_name }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
