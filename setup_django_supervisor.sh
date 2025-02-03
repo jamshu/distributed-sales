@@ -11,6 +11,7 @@ command_exists() {
 # Variables
 USER_HOME=$(eval echo ~$USER) # Get the home directory of the current user
 PROJECT_DIR="$(dirname "$(realpath "$0")")" # The Django project path in the user's home directory
+PROJECT_NAME="cfedsales" # The Django project name
 VENV_DIR="$PROJECT_DIR/venv" # Virtual environment directory inside the project
 LOG_DIR="/var/log/supervisor"
 SUPERVISOR_CONF="/etc/supervisor/conf.d/django_project.conf"
@@ -95,7 +96,7 @@ sudo tee $SUPERVISOR_CONF > /dev/null <<EOL
 nodaemon=true
 
 [program:django]
-command=$VENV_DIR/bin/python $PROJECT_DIR/manage.py runserver 0.0.0.0:5000
+command=$VENV_DIR/bin/gunicorn --config gunicorn_config.py ${PROJECT_NAME}.wsgi:application
 directory=$PROJECT_DIR
 autostart=true
 autorestart=true
