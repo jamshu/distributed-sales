@@ -43,9 +43,10 @@
                     </div>
                 </div>
             </div>
-             <!-- Total Cash Revenue Card -->
+
+            <!-- Total Cash Revenue Card -->
             <div class="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow">
-                <div class="flex items center">
+                <div class="flex items-center">
                     <div class="p-3 bg-green-100 rounded-lg">
                         <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
@@ -75,50 +76,54 @@
         </div>
 
         <!-- Store Performance Cards -->
-      <!-- Store Performance Cards -->
-<div class="mb-8">
-    <h2 class="text-xl font-semibold text-gray-800 mb-6">Retail Point Sales</h2>
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {% for store in dashboard_data %}
-        {% if store.total_revenue > 0 %}
-        <a href="{% url 'sale_list' retail_point_id=store.retail_point %}?date={{ current_date|date:'Y-m-d' }}" class="block">
-            <div class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow">
-                <div class="p-6">
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-lg font-semibold text-gray-900">{{ store.retail_point_name }}</h3>
-                        <div class="p-2 bg-blue-100 rounded-full">
-                            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
-                            </svg>
+        <div class="mb-8">
+            <h2 class="text-xl font-semibold text-gray-800 mb-6">Retail Point Sales</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {% for store in dashboard_data|dictsort:"total_revenue" reversed %}
+                {% if store.total_revenue > 0 %}
+                <a href="{% url 'sale_list' retail_point_id=store.retail_point %}?date={{ current_date|date:'Y-m-d' }}" class="block relative">
+                    <!-- Ranking Banner -->
+                    <div class="absolute -top-2 -right-2 w-12 h-12 bg-blue-600 text-white rounded-full shadow-lg flex items-center justify-center z-10">
+                        <span class="text-lg font-bold">#{{ forloop.counter }}</span>
+                    </div>
+                    
+                    <div class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow">
+                        <div class="p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-lg font-semibold text-gray-900">{{ store.retail_point_name }}</h3>
+                                <div class="p-2 bg-blue-100 rounded-full">
+                                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm text-gray-500">Sales Count</span>
+                                    <span class="text-sm font-medium text-gray-900">{{ store.total_sales }}</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm text-green-500">Cash Revenue</span>
+                                    <span class="text-sm font-medium text-green-700">₹{{ store.cash_revenue|floatformat:2 }}</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm text-gray-500">Total Revenue</span>
+                                    <span class="text-sm font-medium text-gray-900">₹{{ store.total_revenue|floatformat:2 }}</span>
+                                </div>
+                            </div>
+                            <div class="mt-4 pt-4 border-t border-gray-100">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-xs text-gray-500">Status</span>
+                                    <span class="px-2 py-1 text-xs font-medium text-green-700 bg-green-100 rounded-full">Active</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="space-y-3">
-                        <div class="flex justify-between items-center">
-                            <span class="text-sm text-gray-500">Sales Count</span>
-                            <span class="text-sm font-medium text-gray-900">{{ store.total_sales }}</span>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-sm text-green-500">Cash Revenue</span>
-                            <span class="text-sm font-medium text-green-700">₹{{ store.cash_revenue|floatformat:2 }}</span>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-sm text-gray-500">Total Revenue</span>
-                            <span class="text-sm font-medium text-gray-900">₹{{ store.total_revenue|floatformat:2 }}</span>
-                        </div>
-                    </div>
-                    <div class="mt-4 pt-4 border-t border-gray-100">
-                        <div class="flex justify-between items-center">
-                            <span class="text-xs text-gray-500">Status</span>
-                            <span class="px-2 py-1 text-xs font-medium text-green-700 bg-green-100 rounded-full">Active</span>
-                        </div>
-                    </div>
-                </div>
+                </a>
+                {% endif %}
+                {% endfor %}
             </div>
-        </a>
-        {% endif %}
-        {% endfor %}
-    </div>
-</div>
+        </div>
     </div>
 </div>
 {% endblock %}
