@@ -11,9 +11,16 @@
             {% if request.GET.date %}
             <input type="hidden" name="date" value="{{ request.GET.date }}">
             {% endif %}
+            {% if request.GET.payment_journal_id %}
+            <input type="hidden" name="payment_journal_id" value="{{ request.GET.payment_journal_id }}">
+            {% endif %}
+            {% if request.GET.counter_id %}
+            <input type="hidden" name="counter_id" value="{{ request.GET.counter_id }}">
+            {% endif %}
             <button type="submit" class="bg-white text-blue-700 py-2 px-4 rounded ml-2 hover:bg-gray-100">Search</button>
         </form>
     </div>
+
 
     <div class="overflow-x-auto">
         <table class="min-w-full">
@@ -55,13 +62,13 @@
         <div class="flex items-center justify-between">
             <div class="flex-1 flex justify-between sm:hidden">
                 {% if page_obj.has_previous %}
-                <a href="?page={{ page_obj.previous_page_number }}{% if request.GET.date %}&date={{ request.GET.date }}{% endif %}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" 
+                <a href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
                    class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
                     Previous
                 </a>
                 {% endif %}
                 {% if page_obj.has_next %}
-                <a href="?page={{ page_obj.next_page_number }}{% if request.GET.date %}&date={{ request.GET.date }}{% endif %}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" 
+                <a href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
                    class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
                     Next
                 </a>
@@ -76,13 +83,13 @@
                 <div>
                     <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
                         {% if page_obj.has_previous %}
-                        <a href="?page={{ page_obj.previous_page_number }}{% if request.GET.date %}&date={{ request.GET.date }}{% endif %}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" 
+                        <a href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
                            class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
                             Previous
                         </a>
                         {% endif %}
                         {% if page_obj.has_next %}
-                        <a href="?page={{ page_obj.next_page_number }}{% if request.GET.date %}&date={{ request.GET.date }}{% endif %}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" 
+                        <a href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
                            class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
                             Next
                         </a>
