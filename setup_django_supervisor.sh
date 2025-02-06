@@ -95,23 +95,6 @@ sudo tee $SUPERVISOR_CONF > /dev/null <<EOL
 [supervisord]
 nodaemon=true
 
-[program:django]
-command=$VENV_DIR/bin/gunicorn --config gunicorn_config.py ${PROJECT_NAME}.wsgi:application
-directory=$PROJECT_DIR
-autostart=true
-autorestart=true
-stdout_logfile=$LOG_DIR/django.log
-stderr_logfile=$LOG_DIR/django_error.log
-
-[program:django_admin]
-command=$VENV_DIR/bin/python $PROJECT_DIR/manage.py runserver 0.0.0.0:5000
-directory=$PROJECT_DIR
-autostart=true
-autorestart=true
-stdout_logfile=$LOG_DIR/django_admin.log
-stderr_logfile=$LOG_DIR/django_admin_error.log
-
-
 [program:send_summary]
 command=$VENV_DIR/bin/python3 $PROJECT_DIR/manage.py rqworker send_summary
 directory=$PROJECT_DIR

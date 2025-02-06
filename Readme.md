@@ -20,6 +20,12 @@
 - sudo ./setup_django_supervisor.sh
 
 ## Superviosor
-sudo supervisorctl status
-sudo supervisorctl start rq_day_close:*
-sudo supervisorctl stop rq_day_close:*
+- sudo supervisorctl status
+- sudo supervisorctl start rq_day_close:*
+- sudo supervisorctl stop rq_day_close:*
+
+## Django service
+ - To Restart Django Service: sudo systemctl restart gunicorn.service
+
+## Notes:
+- in postgreql increase max connection 100 to 250 min due to the number of shards
