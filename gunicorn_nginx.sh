@@ -118,8 +118,9 @@ configure_nginx() {
     
     sudo tee /etc/nginx/sites-available/"$PROJECT_NAME" > /dev/null <<EOL
 server {
-    listen 80;
-    server_name localhost 127.0.0.1;
+     listen 80 default_server;
+     listen [::]:80 default_server;
+     server_name _;
 
     location = /favicon.ico { access_log off; log_not_found off; }
     
