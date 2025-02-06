@@ -18,6 +18,7 @@
 - clone the repo
 - chmod+x setup_django_supervisor.sh
 - sudo ./setup_django_supervisor.sh
+- ./gunicorn_nginx.sh
 
 ## Superviosor
 - sudo supervisorctl status
