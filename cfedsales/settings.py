@@ -85,22 +85,50 @@ DATABASES = {
         'USER': os.getenv('DB_USER', 'django'),
         'PASSWORD': os.getenv('DB_PASSWORD', 'secure_password'),
         'HOST': os.getenv('DB_HOST', 'localhost'),
-        'PORT': os.getenv('DB_PORT', '5432'),
-    }
+        'PORT': os.getenv('DB_PORT', '6432'),
+        'CONN_MAX_AGE': 30,     
+        'CONN_HEALTH_CHECKS': True,
+        'POOL': {
+            'MAX_CONNECTIONS': 5,
+            'TIMEOUT': 20
+                 },
+        'OPTIONS': {
+                'application_name': "django_central",
+                'keepalives': 1,
+                'keepalives_idle': 30,
+                'keepalives_interval': 10,
+                'keepalives_count': 5,
+                
+            }
+}
 }
 
 # Generate shard databases dynamically
 def generate_shard_databases(retails):
     shards = {}
-    for i in retails:
-        shards[f'shard_{i}'] = {
-            'ENGINE': 'timescale.db.backends.postgresql',
-            'NAME': f'retail_point_shard_{i}',
-            'USER': os.getenv('DB_USER', 'django'),
-            'PASSWORD': os.getenv('DB_PASSWORD', 'secure_password'),
-            'HOST': os.getenv('DB_HOST', 'localhost'),
-            'PORT': os.getenv('DB_PORT', '5432'),
+    base_config = {
+        'ENGINE': 'timescale.db.backends.postgresql',
+        'USER': os.getenv('DB_USER', 'django'),
+        'PASSWORD': os.getenv('DB_PASSWORD', 'secure_password'),
+        'HOST': os.getenv('DB_HOST', 'localhost'),
+        'PORT': '6432',  # Ensure this is PgBouncer port
+        'CONN_MAX_AGE': 30,  # Reduce connection age
+        'CONN_HEALTH_CHECKS': True,
+        'OPTIONS': {
+            'keepalives': 1,
+            'keepalives_idle': 30,
+            'keepalives_interval': 10,
+            'keepalives_count': 5,
         }
+    }
+    
+    for i in retails:
+        config = base_config.copy()
+        config['NAME'] = f'retail_point_shard_{i}'
+        config['OPTIONS'] = base_config['OPTIONS'].copy()
+        config['OPTIONS']['application_name'] = f'django_shard_{i}'
+        shards[f'shard_{i}'] = config
+    
     return shards
 RETAIL_IDS = [
     81, 115, 116, 119, 68, 82, 69, 83, 70, 117, 71, 85, 72, 113, 73, 

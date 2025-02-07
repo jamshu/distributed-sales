@@ -28,5 +28,7 @@
 ## Django service
  - To Restart Django Service: sudo systemctl restart gunicorn.service
 
-## Notes:
-- in postgreql increase max connection 100 to 250 min due to the number of shards
+## PgBouncer:
+- sudo su - postgres
+- psql -c "SELECT concat('\"django\" \"', passwd, '\"') FROM pg_shadow WHERE usename='django'" -t -A
+- Add the output to /etc/pgbouncer/userlist.txt

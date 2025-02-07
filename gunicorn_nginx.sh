@@ -101,10 +101,9 @@ User=$USERNAME
 Group=www-data
 WorkingDirectory=$PROJECT_PATH
 ExecStart=$PROJECT_PATH/venv/bin/gunicorn \
-          --access-logfile - \
-          --workers 3 \
-          --bind unix:/run/gunicorn.sock \
-          $PROJECT_NAME.wsgi:application
+    --config $PROJECT_PATH/gunicorn_config.py \
+    --bind unix:/run/gunicorn.sock \
+    $PROJECT_NAME.wsgi:application
 
 [Install]
 WantedBy=multi-user.target
