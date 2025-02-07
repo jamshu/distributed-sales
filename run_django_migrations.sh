@@ -29,14 +29,7 @@ fi
 echo "Activating virtual environment..."
 source $VENV_DIR/bin/activate
 
-# Step 6: Install Python requirements
-if [ -f "$PROJECT_DIR/requirements.txt" ]; then
-  echo "Installing Python requirements..."
-  pip install --upgrade pip
-  pip install -r $PROJECT_DIR/requirements.txt
-else
-  echo "requirements.txt not found in $PROJECT_DIR. Skipping installation."
-fi
+
 
 # Step 7: Django initial setup - Migrate Database and Custom Commands
 echo "Running Django management commands..."

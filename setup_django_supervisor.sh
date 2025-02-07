@@ -1,10 +1,24 @@
 #!/bin/bash
 
-
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
 # Function to check if command exists
 command_exists() {
     command -v "$1" >/dev/null 2>&1
 }
+
+print_error() {
+    echo -e "${RED}[!] $1${NC}"
+}
+
+# Check if script is run as root
+if [ "$EUID" -ne 0 ]; then 
+    print_error "Please run as root"
+    exit 1
+fi
 
 
 
@@ -63,7 +77,27 @@ echo "Creating log directory..."
 sudo mkdir -p $LOG_DIR
 sudo chown $USER:$USER $LOG_DIR
 
-# Step 5: Create Supervisor configuration file
+# Step 5: Set up Virtual Environment
+if [ ! -d "$VENV_DIR" ]; then
+  echo "Creating virtual environment in $VENV_DIR..."
+  python3 -m venv $VENV_DIR
+fi
+
+
+# Activate Virtual Environment
+echo "Activating virtual environment..."
+source $VENV_DIR/bin/activate
+
+# Step 6: Install Python requirements
+if [ -f "$PROJECT_DIR/requirements.txt" ]; then
+  echo "Installing Python requirements..."
+  pip install --upgrade pip
+  pip install -r $PROJECT_DIR/requirements.txt
+else
+  echo "requirements.txt not found in $PROJECT_DIR. Skipping installation."
+fi
+
+# Step 7: Create Supervisor configuration file
 echo "Creating Supervisor configuration..."
 sudo tee $SUPERVISOR_CONF > /dev/null <<EOL
 [supervisord]

@@ -16,17 +16,14 @@
 ## to run script
 
 - clone the repo
-- chmod+x setup_django_supervisor.sh
 - sudo ./setup_django_supervisor.sh
-- ./gunicorn_nginx.sh
 
-## Superviosor
+
+## Superviosor commands
 - sudo supervisorctl status
 - sudo supervisorctl start rq_day_close:*
 - sudo supervisorctl stop rq_day_close:*
 
-## Django service
- - To Restart Django Service: sudo systemctl restart gunicorn.service
 
 ## PgBouncer:
 - sudo ./install_pgbouncer.sh
@@ -34,6 +31,13 @@
 - (do not copy the below command from web interface of Readme this command,copy from the raw file of readme, its removing some characters) 
 - psql -c "SELECT concat('\"django\" \"', passwd, '\"') FROM pg_shadow WHERE usename='django'" -t -A
 - Add the output to /etc/pgbouncer/userlist.txt
+- sudo systemctl reload pgbouncer
 ## Migration
-- Finally run the migration command
+- run the migration command
 - ./run_django_migrations.sh
+## Gunicorn
+- run django as gunicorn service
+- ./gunicorn_nginx.sh
+- create superuser using 
+- python3 manage.py createsuperuser
+- To Restart Django Service: sudo systemctl restart gunicorn.service
