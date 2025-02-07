@@ -1,4 +1,4 @@
-#  Django Distributed  Application to store Sales 2024-12-24
+#  Django Distributed  Application to store Sales
 ##  Installation
 - [ ] Install Postgres
 - [ ] Install TimescaleDB
