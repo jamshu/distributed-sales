@@ -120,7 +120,7 @@ configure_nginx() {
 server {
      listen 80;
     
-     server_name 127.0.0.1;
+     server_name _;
 
     location = /favicon.ico { access_log off; log_not_found off; }
     
@@ -141,6 +141,8 @@ EOL
 
     # Enable site and test configuration
     sudo ln -sf /etc/nginx/sites-available/"$PROJECT_NAME" /etc/nginx/sites-enabled/
+    sudo rm /etc/nginx/sites-enabled/default
+    sudo rm /etc/nginx/sites-available/default
     sudo nginx -t || error "Nginx configuration test failed"
 }
 

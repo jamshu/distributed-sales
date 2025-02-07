@@ -108,7 +108,7 @@ stderr_logfile=$LOG_DIR/rq_send_summary_error.log
 [program:rq_sales_processing]
 command=$VENV_DIR/bin/python3 $PROJECT_DIR/manage.py rqworker sales_processing
 directory=$PROJECT_DIR
-numprocs=12
+numprocs=4
 process_name=%(program_name)s_%(process_num)02d
 autostart=true
 autorestart=true
@@ -118,7 +118,7 @@ stderr_logfile=$LOG_DIR/rq_sales_processing_error.log
 [program:rq_day_close]
 command=$VENV_DIR/bin/python3 $PROJECT_DIR/manage.py rqworker day_close
 directory=$PROJECT_DIR
-numprocs=8
+numprocs=12
 process_name=%(program_name)s_%(process_num)02d
 autostart=true
 autorestart=true
