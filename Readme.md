@@ -13,7 +13,7 @@
 
 ## Use Supervisor ctl for configure as service
 
-## to run script
+## Install Supervisor Workers
 
 - clone the repo
 - sudo ./setup_django_supervisor.sh
