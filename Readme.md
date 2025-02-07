@@ -32,7 +32,7 @@
 - psql -c "SELECT concat('\"django\" \"', passwd, '\"') FROM pg_shadow WHERE usename='django'" -t -A
 - Add the output to /etc/pgbouncer/userlist.txt
 - sudo systemctl reload pgbouncer
-## Migration
+## DB Schema Migration
 - run the migration command
 - ./run_django_migrations.sh
 ## Gunicorn
