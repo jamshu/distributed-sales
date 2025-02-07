@@ -30,5 +30,9 @@
 
 ## PgBouncer:
 - sudo su - postgres
+- (do not copy the below command from web interface of Readme this command,copy from the raw file of readme, its removing some characters) 
 - psql -c "SELECT concat('\"django\" \"', passwd, '\"') FROM pg_shadow WHERE usename='django'" -t -A
 - Add the output to /etc/pgbouncer/userlist.txt
+## Migration
+- Finally run the migration command
+- ./run_django_migrations.sh

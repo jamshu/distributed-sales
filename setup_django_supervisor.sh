@@ -63,33 +63,7 @@ echo "Creating log directory..."
 sudo mkdir -p $LOG_DIR
 sudo chown $USER:$USER $LOG_DIR
 
-# Step 5: Set up Virtual Environment
-if [ ! -d "$VENV_DIR" ]; then
-  echo "Creating virtual environment in $VENV_DIR..."
-  python3 -m venv $VENV_DIR
-fi
-
-# Activate Virtual Environment
-echo "Activating virtual environment..."
-source $VENV_DIR/bin/activate
-
-# Step 6: Install Python requirements
-if [ -f "$PROJECT_DIR/requirements.txt" ]; then
-  echo "Installing Python requirements..."
-  pip install --upgrade pip
-  pip install -r $PROJECT_DIR/requirements.txt
-else
-  echo "requirements.txt not found in $PROJECT_DIR. Skipping installation."
-fi
-
-# Step 7: Django initial setup - Migrate Database and Custom Commands
-echo "Running Django management commands..."
-python3 $PROJECT_DIR/manage.py create_shard_database
-python3 $PROJECT_DIR/manage.py enable_timescale
-python3 $PROJECT_DIR/manage.py migrate
-python3 $PROJECT_DIR/manage.py migrate_shards
-
-# Step 8: Create Supervisor configuration file
+# Step 5: Create Supervisor configuration file
 echo "Creating Supervisor configuration..."
 sudo tee $SUPERVISOR_CONF > /dev/null <<EOL
 [supervisord]
