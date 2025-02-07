@@ -29,6 +29,7 @@
  - To Restart Django Service: sudo systemctl restart gunicorn.service
 
 ## PgBouncer:
+- sudo ./install_pgbouncer.sh
 - sudo su - postgres
 - (do not copy the below command from web interface of Readme this command,copy from the raw file of readme, its removing some characters) 
 - psql -c "SELECT concat('\"django\" \"', passwd, '\"') FROM pg_shadow WHERE usename='django'" -t -A
