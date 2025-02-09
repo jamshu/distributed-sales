@@ -1,4 +1,6 @@
 #  Django Distributed  Application to store Sales
+## Os
+- Preferred Os: Ubuntu 22.04.5
 ##  Installation
 - [ ] Install Postgres
 - [ ] Install TimescaleDB
