@@ -67,6 +67,7 @@ class SalesDashboardView(TemplateView):
         except ValueError:
             current_date = timezone.now().date()
         
+        search_query = self.request.GET.get('search', '').strip()
         # List of retail points (shards)
         retail_points = settings.RETAIL_IDS
         dashboard_data = []
@@ -88,6 +89,12 @@ class SalesDashboardView(TemplateView):
                 if result is not None:
                     dashboard_data.append(result)
         
+        # Filter dashboard data based on search query
+        if search_query:
+            dashboard_data = [
+                data for data in dashboard_data 
+                if search_query.lower() in data['retail_point_name'].lower()
+            ]
         # Sort dashboard data by total revenue
         dashboard_data.sort(key=lambda x: x['total_revenue'], reverse=True)
         
