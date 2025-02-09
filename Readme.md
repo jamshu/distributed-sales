@@ -23,6 +23,7 @@
 - sudo supervisorctl status
 - sudo supervisorctl start rq_day_close:*
 - sudo supervisorctl stop rq_day_close:*
+- sudo supervisorctl reload
 
 
 ## PgBouncer:
@@ -37,3 +38,13 @@
 - create superuser using 
 - python3 manage.py createsuperuser
 - To Restart Django Service: sudo systemctl restart gunicorn.service
+
+## Notes
+- install bcrypt in odoo cloud using: pip install bcrypt
+- set a secret key in odoo.conf : secret_key = super-strong-key
+- same secret key add in django root folder inside .env file : SECRET_KEY = super-strong-key
+- create super user using: 
+- django folder: . venv/bin/activate
+- python3 manage.py createsuperuser
+- in django admin page create user token
+- add this user token on retail point django user token

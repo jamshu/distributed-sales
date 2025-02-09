@@ -3,12 +3,6 @@
 # Django Deployment Automated Script
 # Usage: ./deploy.sh /path/to/project ProjectName domain.com username
 
-# Check if all arguments are provided
-# if [ $# -ne 4 ]; then
-#     echo "Usage: $0 /path/to/project ProjectName domain.com username"
-#     exit 1
-# fi
-
 # Arguments
 PROJECT_PATH="$(dirname "$(realpath "$0")")"
 PROJECT_NAME="cfedsales"
@@ -50,8 +44,6 @@ system_prep() {
     sudo apt install -y python3-pip python3-venv nginx certbot python3-certbot-nginx ufw
 }
 
-
-
 # Django Project Configuration
 configure_django() {
     log "Configuring Django project..."
@@ -66,8 +58,6 @@ configure_django() {
     
     # Collect static files
     python3 manage.py collectstatic --noinput --clear --settings=$PROJECT_NAME.settings
-    
-  
     
     deactivate
 }
@@ -90,6 +80,13 @@ EOL
 # Gunicorn Service Configuration
 configure_gunicorn_service() {
     log "Configuring Gunicorn service..."
+    
+    # Create Gunicorn log directory and set permissions
+    log "Creating Gunicorn log directory..."
+    sudo mkdir -p /var/log/gunicorn
+    sudo chown -R $USERNAME:www-data /var/log/gunicorn
+    sudo chmod -R 664  /var/log/gunicorn
+    
     sudo tee /etc/systemd/system/gunicorn.service > /dev/null <<EOL
 [Unit]
 Description=gunicorn daemon
@@ -130,6 +127,9 @@ server {
     location /media/ {
         root $PROJECT_PATH;
     }
+    location = / {
+        return 301 /sales/dashboard;
+    }
 
     location / {
         include proxy_params;
@@ -143,12 +143,6 @@ EOL
     sudo rm /etc/nginx/sites-enabled/default
     sudo rm /etc/nginx/sites-available/default
     sudo nginx -t || error "Nginx configuration test failed"
-}
-
-# SSL with Certbot
-setup_ssl() {
-    log "Setting up SSL with Certbot..."
-    sudo certbot --nginx -d "$DOMAIN" -d "www.$DOMAIN" --non-interactive
 }
 
 # Firewall Configuration

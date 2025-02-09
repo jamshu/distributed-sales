@@ -4,11 +4,23 @@ from django.db import connections, transaction
 from django.db.models import Sum, Count
 from django.utils import timezone
 import requests
-import logging
 import json
 from .models import Sale, SaleLine, LotLine, MiscLotLine
 from .validators import validate_sale_data
 from decimal import Decimal
+from django.conf import settings
+from requests.exceptions import RequestException
+import json
+import logging
+
+logger = logging.getLogger(__name__)
+
+class SubmissionError(Exception):
+    """Custom exception for  submission failures"""
+    pass
+
+SECRET_KEY = settings.SECRET_KEY
+KEY_CRYPT_CONTEXT = settings.KEY_CRYPT_CONTEXT
 
 class DecimalEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -23,7 +35,7 @@ def process_sale_order(sale_data):
     try:
         # Validate incoming data
         validated_data = json.loads(sale_data)
-        print(validated_data)        
+            
         # Determine shard
         retail_point_id = validated_data['retail_point_id']
         
@@ -130,34 +142,52 @@ def process_sale_order(sale_data):
             'retail_point_id': retail_point_id
         }
     
+    except RequestException as e:
+        error_message = f"HTTP request failed: {str(e)}"
+        logger.error(error_message)
+        raise SubmissionError(error_message)
+        
     except Exception as e:
-        job = django_rq.get_current_job()  # Get the current job
-        if job:
-            job.meta['status'] = 'failed'
-            job.save()  # Save the job with status 'failed'
-        logger.error(f"Error processing sale order: {e}")
-        return {'status': 'error', 'message': str(e)}
+        error_message = f"Error: {str(e)}"
+        logger.error(error_message)
+        raise SubmissionError(error_message)
+
+
+def encrypt_value(value: str) -> str:
+    return KEY_CRYPT_CONTEXT.hash(value + SECRET_KEY)
 
 @django_rq.job('send_summary')
 def send_summary_to_odoo(summary_payload, url):
-   
     try:
+        # Encrypt the `sale_num` before sending
+        summary_payload['encrypted_sale_num'] = encrypt_value(summary_payload['sale_num'])
         payload_json = json.dumps(summary_payload, cls=DecimalEncoder)
+        
         response = requests.post(
             url,
             data=payload_json,
             headers={'Content-Type': 'application/json'}
         )
         response.raise_for_status()
-        data  = response.json()
+        data = response.json()
+        
+        # Check if the response indicates a failure
+        if isinstance(data, dict) and data.get('result', {}).get('status') == 'Failed':
+            error_message = data.get('result', {}).get('message', 'Unknown error occurred')
+            logger.error(f"Failed to send summary to Odoo: {error_message}")
+            raise SubmissionError(error_message)
+            
         return data
-       
+        
+    except RequestException as e:
+        error_message = f"HTTP request failed: {str(e)}"
+        logger.error(error_message)
+        raise SubmissionError(error_message)
+        
     except Exception as e:
-        logger.error(f"Error sending summary to Odoo: {e}")
-        job = django_rq.get_current_job()  # Get the current job
-        if job:
-            job.meta['status'] = 'failed'
-        return {"error": str(e)}
+        error_message = f"Error sending summary to Odoo: {str(e)}"
+        logger.error(error_message)
+        raise SubmissionError(error_message)
 
 
 def get_local_retail_point_id(shard_db):
@@ -312,9 +342,12 @@ def generate_day_close_summary(retail_point_id, date=None, url=None):
         
         return result
 
+    except RequestException as e:
+        error_message = f"HTTP request failed: {str(e)}"
+        logger.error(error_message)
+        raise SubmissionError(error_message)
+        
     except Exception as e:
-        logger.error(f"Error processing daily summary: {e}")
-        job = django_rq.get_current_job()  # Get the current job
-        if job:
-            job.meta['status'] = 'failed'
-        return {"error": str(e)}
+        error_message = f"Error: {str(e)}"
+        logger.error(error_message)
+        raise SubmissionError(error_message)

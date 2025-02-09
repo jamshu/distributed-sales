@@ -1,6 +1,8 @@
 from django.utils import timezone
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.authentication import TokenAuthentication, SessionAuthentication
 from rest_framework import status
 from django.conf import settings
 from .tasks import process_sale_order, generate_day_close_summary
@@ -13,6 +15,11 @@ class SaleOrderProcessView(APIView):
     
     Accepts sale order data and queues it for processing
     """
+    # Add authentication classes
+    authentication_classes = [TokenAuthentication]
+    # Add permission classes
+    permission_classes = [IsAuthenticated]
+
     def post(self, request):
         try:
             # Get sale data from request
@@ -47,16 +54,21 @@ class DayCloseSummaryView(APIView):
     
     Allows generating summary for current day or a specific date
     Supports both immediate and queued processing
+
     """
+    authentication_classes = [TokenAuthentication]
+    # Add permission classes
+    permission_classes = [IsAuthenticated]
     def post(self, request):
         try:
            
             
             data = request.POST.dict()
+            # data = request.data  # Use request.data for JSON payload
             date_str = data.get('close_date')
             retail_point_id = data.get('retail_point_id')
             url = data.get('url')
-            print("data url>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>", url)
+            
             # Parse date if provided
             if date_str:
                 try:

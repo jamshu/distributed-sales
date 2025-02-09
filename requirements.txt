@@ -1,6 +1,7 @@
 asgiref==3.8.1
 async-timeout==5.0.1
 attrs==24.3.0
+bcrypt==4.2.1
 certifi==2024.12.14
 charset-normalizer==3.4.0
 click==8.1.7
@@ -13,8 +14,10 @@ idna==3.10
 jsonschema==4.23.0
 jsonschema-specifications==2024.10.1
 packaging==24.2
+passlib==1.7.4
 psycopg2-binary==2.9.10
 python-dateutil==2.9.0.post0
+python-dotenv==1.0.1
 redis==5.2.1
 referencing==0.35.1
 requests==2.32.3

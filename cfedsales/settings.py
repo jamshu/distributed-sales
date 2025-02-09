@@ -12,6 +12,13 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 import os
+from dotenv import load_dotenv
+from passlib.context import CryptContext
+# Load .env file
+load_dotenv()
+
+# Get secret key from .env
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -20,7 +27,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-mp&!t#8m1-mq$nl53is#xuwq0cn@m1cg-h67pq2$why_mq$ti+'
+SECRET_KEY = os.getenv("SECRET_KEY")
+# CryptContext for hashing
+KEY_CRYPT_CONTEXT = CryptContext(
+    schemes=['bcrypt'], 
+    bcrypt__rounds=12
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -38,9 +50,16 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',  
     'rest_framework',
+    'rest_framework.authtoken',
     'django_rq',
     'sales',
 ]
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication'
+    ],
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
