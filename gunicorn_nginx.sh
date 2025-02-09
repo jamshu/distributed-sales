@@ -41,7 +41,7 @@ system_prep() {
     log "Updating system and installing dependencies..."
     sudo apt update
     sudo apt upgrade -y
-    sudo apt install -y python3-pip python3-venv nginx certbot python3-certbot-nginx ufw
+    sudo apt install -y  nginx  ufw
 }
 
 # Django Project Configuration
@@ -85,7 +85,7 @@ configure_gunicorn_service() {
     log "Creating Gunicorn log directory..."
     sudo mkdir -p /var/log/gunicorn
     sudo chown -R $USERNAME:www-data /var/log/gunicorn
-    sudo chmod -R 664  /var/log/gunicorn
+    sudo chmod -R 755  /var/log/gunicorn
     
     sudo tee /etc/systemd/system/gunicorn.service > /dev/null <<EOL
 [Unit]
