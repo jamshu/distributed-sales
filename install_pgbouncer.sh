@@ -60,7 +60,6 @@ MAX_DB_CONN=${MAX_DB_CONN:-360}
 
 # Install required packages
 print_status "Installing PgBouncer and dependencies..."
-apt-get update
 apt-get install -y pgbouncer postgresql-client-14
 
 # Stop PgBouncer if running

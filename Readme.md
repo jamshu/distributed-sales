@@ -30,7 +30,8 @@
 - sudo ./install_pgbouncer.sh
 
 ## DB Schema Migration
-- run the migration command
+- add .env in django root folder and add SECRET_KEY="MY SECRET KEY"
+- run the migration command (make sure you ADDED SECRET_KEY in .env file)
 - ./run_django_migrations.sh
 ## Gunicorn
 - run django as gunicorn service

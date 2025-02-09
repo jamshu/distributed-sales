@@ -39,9 +39,7 @@ validate_inputs() {
 # System Update and Dependencies
 system_prep() {
     log "Updating system and installing dependencies..."
-    sudo apt update
-    sudo apt upgrade -y
-    sudo apt install -y  nginx  ufw
+    sudo apt install -y nginx ufw
 }
 
 # Django Project Configuration
