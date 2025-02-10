@@ -38,7 +38,9 @@ KEY_CRYPT_CONTEXT = CryptContext(
 DEBUG = True
 
 ALLOWED_HOSTS = ['django-dev.ultsglobal.com', 'localhost', '127.0.0.1']
-
+CSRF_TRUSTED_ORIGINS = [
+    'https://django-dev.ultsglobal.com',
+]
 
 # Application definition
 

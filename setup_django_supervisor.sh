@@ -85,6 +85,7 @@ fi
 
 
 # Activate Virtual Environment
+sudo chown -R $USER:$USER $VENV_DIR
 echo "Activating virtual environment..."
 source $VENV_DIR/bin/activate
 
