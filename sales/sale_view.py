@@ -1,10 +1,13 @@
 from django.db.models import Prefetch
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic.list import ListView
 from django.views.generic.detail import DetailView
 from .models import Sale, SaleLine, LotLine
 
 
-class ShardedQuerysetMixin:
+class ShardedQuerysetMixin(LoginRequiredMixin):
+    login_url = '/login/'  # Optional: specify a custom login page
+    redirect_field_name = 'next'  # Optional: customize redirect parameter
     def get_queryset(self):
         # Get retail_point_id from session or URL
         retail_point_id = self.request.session.get('retail_point_id') or self.kwargs.get('retail_point_id')

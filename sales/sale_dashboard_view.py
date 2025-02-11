@@ -1,4 +1,5 @@
 from django.views.generic import TemplateView
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import connections
 from django.db.models import Q, Sum
 from django.utils import timezone
@@ -7,9 +8,11 @@ from .models import Sale
 from django.conf import settings
 from functools import partial
 
-class SalesDashboardView(TemplateView):
+class SalesDashboardView(LoginRequiredMixin, TemplateView):
     template_name = 'sales/dashboard.html'
-    max_workers = 8  # Adjust based on your server's capabilities
+    max_workers = 8  # Adjust based on  server's capabilities
+    login_url = '/login/'  # Optional: specify a custom login page
+    redirect_field_name = 'next'  # Optional: customize redirect parameter
 
     def process_retail_point(self, retail_point, current_date):
         """Process a single retail point and return its data."""

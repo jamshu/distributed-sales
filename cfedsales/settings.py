@@ -41,7 +41,7 @@ ALLOWED_HOSTS = ['django-dev.ultsglobal.com', 'localhost', '127.0.0.1']
 CSRF_TRUSTED_ORIGINS = [
     'https://django-dev.ultsglobal.com',
 ]
-
+LOGIN_REDIRECT_URL = '/sales/dashboard/'
 # Application definition
 
 INSTALLED_APPS = [
