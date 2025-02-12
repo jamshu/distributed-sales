@@ -120,7 +120,6 @@ tcp_keepalive = 1
 tcp_keepidle = 30
 tcp_keepintvl = 10
 
-max_prepared_statements = 0
 
 admin_users = $PG_USER
 stats_users = $PG_USER
