@@ -18,7 +18,7 @@
 ## Install Supervisor Workers
 
 - clone the repo
-- sudo ./setup_django_supervisor.sh
+- ./setup_django_supervisor.sh
 
 
 ## Superviosor commands
