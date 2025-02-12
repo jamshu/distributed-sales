@@ -39,7 +39,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['django-dev.ultsglobal.com', 'localhost', '127.0.0.1']
 CSRF_TRUSTED_ORIGINS = [
-    'https://django-dev.ultsglobal.com',
+    'https://django-dev.ultsglobal.com','localhost',
 ]
 LOGIN_REDIRECT_URL = '/sales/dashboard/'
 # Application definition

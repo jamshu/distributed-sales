@@ -1,5 +1,6 @@
 #!/bin/bash
 
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -14,11 +15,6 @@ print_error() {
     echo -e "${RED}[!] $1${NC}"
 }
 
-# Check if script is run as root
-if [ "$EUID" -ne 0 ]; then 
-    print_error "Please run as root"
-    exit 1
-fi
 
 
 
@@ -32,7 +28,15 @@ SUPERVISOR_CONF="/etc/supervisor/conf.d/django_project.conf"
 DB_USER="django"
 DB_PASSWORD="secure_password"
 
+# Prompt for configuration values
+read -p "Enter Sales Processing Woker[8]: " SP_WORK
+SP_WORK=${SP_WORK:-8}
 
+read -p "Enter DayClose Woker[12]: " DC_WORK
+DC_WORK=${DC_WORK:-12}
+
+read -p "Enter Send Summary Woker[4]: " SM_WORK
+SM_WORK=${SM_WORK:-12}
 
 # Add PostgreSQL repository
 echo "Adding PostgreSQL repository..."
@@ -85,7 +89,6 @@ fi
 
 
 # Activate Virtual Environment
-sudo chown -R $USER:$USER $VENV_DIR
 echo "Activating virtual environment..."
 source $VENV_DIR/bin/activate
 
@@ -97,6 +100,8 @@ if [ -f "$PROJECT_DIR/requirements.txt" ]; then
 else
   echo "requirements.txt not found in $PROJECT_DIR. Skipping installation."
 fi
+echo "user :"
+echo $USER
 
 # Step 7: Create Supervisor configuration file
 echo "Creating Supervisor configuration..."
@@ -107,7 +112,7 @@ nodaemon=true
 [program:send_summary]
 command=$VENV_DIR/bin/python3 $PROJECT_DIR/manage.py rqworker send_summary
 directory=$PROJECT_DIR
-numprocs=2
+numprocs=$SM_WORK
 process_name=%(program_name)s_%(process_num)02d
 autostart=true
 autorestart=true
@@ -117,7 +122,7 @@ stderr_logfile=$LOG_DIR/rq_send_summary_error.log
 [program:rq_sales_processing]
 command=$VENV_DIR/bin/python3 $PROJECT_DIR/manage.py rqworker sales_processing
 directory=$PROJECT_DIR
-numprocs=4
+numprocs=$SP_WORK
 process_name=%(program_name)s_%(process_num)02d
 autostart=true
 autorestart=true
@@ -127,7 +132,7 @@ stderr_logfile=$LOG_DIR/rq_sales_processing_error.log
 [program:rq_day_close]
 command=$VENV_DIR/bin/python3 $PROJECT_DIR/manage.py rqworker day_close
 directory=$PROJECT_DIR
-numprocs=12
+numprocs=$DC_WORK
 process_name=%(program_name)s_%(process_num)02d
 autostart=true
 autorestart=true
