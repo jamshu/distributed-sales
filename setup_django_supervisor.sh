@@ -106,7 +106,7 @@ sudo systemctl restart postgresql
 echo "Configuring PostgreSQL..."
 sudo -u postgres psql -c "CREATE USER $DB_USER WITH PASSWORD '$DB_PASSWORD';"
 sudo -u postgres psql -c "ALTER USER $DB_USER CREATEDB;"
-
+sudo -u postgres psql -c "ALTER USER $DB_USER WITH PASSWORD '$DB_PASSWORD';"
 
 # Step 4: Create log directory
 echo "Creating log directory..."
@@ -134,8 +134,6 @@ else
 fi
 echo "user :"
 echo $USER
-# Generate env
-generate_env_secrets
 
 # Step 7: Create Supervisor configuration file
 echo "Creating Supervisor configuration..."
@@ -191,3 +189,5 @@ sudo supervisorctl status
 echo "Setup Complete!"
 echo "User: $DB_USER"
 echo "Password: $DB_PASSWORD"
+# Generate env
+generate_env_secrets

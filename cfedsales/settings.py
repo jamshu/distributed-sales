@@ -37,9 +37,9 @@ KEY_CRYPT_CONTEXT = CryptContext(
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['django-dev.ultsglobal.com', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['django-dev.ultsglobal.com', 'localhost', '127.0.0.1','192.168.64.3']
 CSRF_TRUSTED_ORIGINS = [
-    'https://django-dev.ultsglobal.com','http://localhost/',
+    'https://django-dev.ultsglobal.com','http://localhost/','http://192.168.64.3/'
 ]
 LOGIN_REDIRECT_URL = '/sales/dashboard/'
 # Application definition
