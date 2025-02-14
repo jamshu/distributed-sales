@@ -68,7 +68,7 @@ read -p "Enter DayClose Woker[12]: " DC_WORK
 DC_WORK=${DC_WORK:-12}
 
 read -p "Enter Send Summary Woker[4]: " SM_WORK
-SM_WORK=${SM_WORK:-12}
+SM_WORK=${SM_WORK:-4}
 
 # Add PostgreSQL repository
 echo "Adding PostgreSQL repository..."
