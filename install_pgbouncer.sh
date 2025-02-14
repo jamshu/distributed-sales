@@ -25,19 +25,8 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
+PG_USER="django"
 # Prompt for configuration values
-read -p "Enter PostgreSQL username [django]: " PG_USER
-PG_USER=${PG_USER:-django}
-
-read -sp "Enter PostgreSQL password: " PG_PASSWORD
-echo
-read -sp "Confirm PostgreSQL password: " PG_PASSWORD_CONFIRM
-echo
-
-if [ "$PG_PASSWORD" != "$PG_PASSWORD_CONFIRM" ]; then
-    print_error "Passwords do not match!"
-    exit 1
-fi
 
 read -p "Enter PostgreSQL host [localhost]: " PG_HOST
 PG_HOST=${PG_HOST:-localhost}
@@ -188,59 +177,7 @@ if systemctl is-active --quiet pgbouncer; then
     print_status "PgBouncer installation completed successfully!"
     print_status "PgBouncer is running on port $PGBOUNCER_PORT"
     
-    # Print Django settings example
-    print_status "Example Django configuration for your sharded setup:"
-    echo -e "${GREEN}"
-    cat << EOL
-# settings.py example
-DATABASES = {
-    'default': {
-        'ENGINE': 'timescale.db.backends.postgresql',
-        'NAME': os.getenv('CENTRAL_DB_NAME', 'central_sales_db'),
-        'USER': '$PG_USER',
-        'PASSWORD': '$PG_PASSWORD',
-        'HOST': 'localhost',
-        'PORT': '$PGBOUNCER_PORT',
-        'CONN_MAX_AGE': 30,
-        'CONN_HEALTH_CHECKS': True,
-        'OPTIONS': {
-            'application_name': 'django_central',
-            'keepalives': 1,
-            'keepalives_idle': 30,
-            'keepalives_interval': 10,
-            'keepalives_count': 5,
-        }
-    }
-}
-
-def generate_shard_databases(retails):
-    shards = {}
-    base_config = {
-        'ENGINE': 'timescale.db.backends.postgresql',
-        'USER': '$PG_USER',
-        'PASSWORD': '$PG_PASSWORD',
-        'HOST': 'localhost',
-        'PORT': '$PGBOUNCER_PORT',
-        'CONN_MAX_AGE': 30,
-        'CONN_HEALTH_CHECKS': True,
-        'OPTIONS': {
-            'keepalives': 1,
-            'keepalives_idle': 30,
-            'keepalives_interval': 10,
-            'keepalives_count': 5,
-        }
-    }
-    
-    for i in retails:
-        config = base_config.copy()
-        config['NAME'] = f'retail_point_shard_{i}'
-        config['OPTIONS'] = base_config['OPTIONS'].copy()
-        config['OPTIONS']['application_name'] = f'django_shard_{i}'
-        shards[f'shard_{i}'] = config
-    
-    return shards
-EOL
-    echo -e "${NC}"
+   
 
     # Print monitoring commands
     print_status "Monitoring commands:"

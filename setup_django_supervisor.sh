@@ -31,7 +31,34 @@ VENV_DIR="$PROJECT_DIR/venv" # Virtual environment directory inside the project
 LOG_DIR="/var/log/supervisor"
 SUPERVISOR_CONF="/etc/supervisor/conf.d/django_project.conf"
 DB_USER="django"
-DB_PASSWORD="secure_password"
+DB_PASSWORD=$(openssl rand -base64 16)
+
+generate_env_secrets() {
+    # Generate a random 32-byte base64 string for SECRET_KEY
+    SECRET_KEY=$(openssl rand -base64 32)
+
+  
+    # Create or overwrite .env file with both secret key and database password
+    cat > .env << EOF
+SECRET_KEY=$SECRET_KEY
+DB_PASSWORD=$DB_PASSWORD
+EOF
+
+    # Set appropriate permissions for the .env file (readable only by owner)
+  
+
+    # Print clear feedback with visual separation
+    echo "----------------------------------------"
+    echo "🔐 Environment Variables Generated!"
+    echo "----------------------------------------"
+    echo 
+    echo "📝 Generated values:"
+    echo "SECRET_KEY = $SECRET_KEY"
+    echo "DB_PASSWORD = $DB_PASSWORD"
+    echo 
+    echo "✅ These values have been saved to .env file"
+    echo "----------------------------------------"
+}
 
 # Prompt for configuration values
 read -p "Enter Sales Processing Woker[8]: " SP_WORK
@@ -107,6 +134,8 @@ else
 fi
 echo "user :"
 echo $USER
+# Generate env
+generate_env_secrets
 
 # Step 7: Create Supervisor configuration file
 echo "Creating Supervisor configuration..."
