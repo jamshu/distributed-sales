@@ -15,6 +15,11 @@ print_error() {
     echo -e "${RED}[!] $1${NC}"
 }
 
+if [ "$EUID" -eq 0 ]; then 
+    print_error "This script should not be run as root"
+    exit 1
+fi
+
 
 
 
